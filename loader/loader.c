@@ -6311,6 +6311,53 @@ VkResult loaderValidateLayers(const struct loader_instance *inst, const uint32_t
     return VK_SUCCESS;
 }
 
+void loader_add_env_instance_extensions(const struct loader_instance *inst, VkInstanceCreateInfo *ici) {
+    char *env_value = loader_getenv("VK_LOADER_FORCE_INST_EXTS", inst);
+    size_t ext_count = 0;
+    if (env_value) {
+        const char *it = env_value;
+        ++ext_count;
+        while((it = strchr(it, ';'))) {
+            ++ext_count;
+        }
+    }
+
+    if (ici->enabledExtensionCount + ext_count == 0) {
+        return;
+    }
+
+    const char** ppExts = (const char**) malloc(sizeof(char*) * (ici->enabledExtensionCount + ext_count));
+    memcpy(ppExts, ici->ppEnabledExtensionNames, ici->enabledExtensionCount * sizeof(char*));
+
+	const char *it = env_value;
+	unsigned i = ici->enabledExtensionCount;
+
+	while(it && *it) {
+		const char *end = strchr(it, ';');
+		const char *next = NULL;
+		if(!end) {
+			end = it + strlen(it);
+		} else {
+			next = end + 1;
+		}
+
+		char *cpy = (char*) malloc(end - it + 1); // TODO: we leak that currently
+		memcpy(cpy, it, end - it);
+		cpy[end - it] = 0;
+		printf("enabling %s\n", cpy);
+
+		ppExts[i] = cpy;
+
+		it = next;
+		++i;
+	}
+
+    ici->enabledExtensionCount += ext_count;
+    ici->ppEnabledExtensionNames = ppExts;
+
+    loader_free_getenv(env_value, inst);
+}
+
 VkResult loader_validate_instance_extensions(struct loader_instance *inst, const struct loader_extension_list *icd_exts,
                                              const struct loader_layer_list *instance_layers,
                                              const VkInstanceCreateInfo *pCreateInfo) {

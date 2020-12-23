@@ -479,6 +479,9 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCr
         }
     }
 
+    // Add force-enabled extensions
+    loader_add_env_instance_extensions(ptr_instance, &ici);
+
     // Scan/discover all ICD libraries
     memset(&ptr_instance->icd_tramp_list, 0, sizeof(ptr_instance->icd_tramp_list));
     res = loader_icd_scan(ptr_instance, &ptr_instance->icd_tramp_list);
@@ -535,6 +538,8 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCr
     }
 
 out:
+
+    free((void*) ici.ppEnabledExtensionNames);
 
     if (NULL != ptr_instance) {
         if (res != VK_SUCCESS) {
@@ -2280,7 +2285,7 @@ LOADER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkGetPhysicalDeviceImageFormatPrope
     VkPhysicalDevice unwrapped_phys_dev = loader_unwrap_physical_device(physicalDevice);
     const VkLayerInstanceDispatchTable *disp = loader_get_instance_layer_dispatch(physicalDevice);
     const struct loader_instance *inst = ((struct loader_physical_device_tramp*) physicalDevice)->this_instance;
-    
+
     if (inst != NULL && inst->enabled_known_extensions.khr_get_physical_device_properties2) {
         return disp->GetPhysicalDeviceImageFormatProperties2KHR(unwrapped_phys_dev, pImageFormatInfo, pImageFormatProperties);
     } else {

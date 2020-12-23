@@ -462,6 +462,8 @@ bool compare_vk_extension_properties(const VkExtensionProperties *op1, const VkE
 VkResult loaderValidateLayers(const struct loader_instance *inst, const uint32_t layer_count,
                               const char *const *ppEnabledLayerNames, const struct loader_layer_list *list);
 
+void loader_add_env_instance_extensions(const struct loader_instance* inst, VkInstanceCreateInfo* pCreateInfo);
+
 VkResult loader_validate_instance_extensions(struct loader_instance *inst, const struct loader_extension_list *icd_exts,
                                              const struct loader_layer_list *instance_layer,
                                              const VkInstanceCreateInfo *pCreateInfo);
